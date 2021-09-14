@@ -1,14 +1,17 @@
 #include "GlassBuilder.h"
 
 const ushort GlassBuilder::popSize=50;        //种群规模
-const ushort GlassBuilder::maxGeneration=500;      //最大代数
-const ushort GlassBuilder::maxFailTimes=25000;
+const ushort GlassBuilder::maxGeneration=3000;      //最大代数
+const ushort GlassBuilder::maxFailTimes=5000;
 const double GlassBuilder::crossoverProb=0.8;      //交叉概率
 const double GlassBuilder::mutateProb=0.05;     //变异概率
-const double GlassBuilder::mutateIntense=1.0/50;      //变异强度
+const double GlassBuilder::mutateIntense=1.0/100;      //变异强度
+const double GlassBuilder::initializeTrueRate=0.75;
 const ARGB airColor=qRgb(255,255,255);
 const ARGB targetColor=qRgb(0,0,0);
 const ARGB glassColor=qRgb(128,128,128);
+const ushort reportRate=50;
+
 
 double randD(){
     static std::default_random_engine generator(time(0));
@@ -18,7 +21,7 @@ double randD(){
 
 int randi(int low,int high) {
     static std::default_random_engine generator(time(0));
-    static std::uniform_int_distribution<int> rander(low,high);
+    std::uniform_int_distribution<int> rander(low,high);
     return rander(generator);
 }
 
@@ -72,15 +75,16 @@ if(begCol+1<walkable.cols()&&
         (visited.find(TokiRC(begRow,begCol+1))==visited.end())) {
     countConnected(begRow,begCol+1,walkable,visited);
 }
+return;
 }
 
-double caculateFitness(const glassMap * glass,
+int caculateFitness(glassMap * glass,
                        const std::vector<TokiPos> * targetMap) {
 walkableMap walkable=glassMap2walkableMap(glass,targetMap);
 std::unordered_set<TokiPos> visited;
 visited.clear();
 
-TokiPos startPoint;
+TokiPos startPoint=TokiRC(0,0);
 for(short r=0;r<glass->rows();r++)
     for(short c=0;c<glass->cols();c++) {
         if(!walkable(r,c)) continue;
@@ -97,13 +101,26 @@ for(auto it=targetMap->cbegin();it!=targetMap->cend();it++) {
         attachedTargets++;
 }
 
-double Fitness=0;
+int Fitness=0;
 
 if(attachedTargets>=targetMap->size()) {
-    Fitness=glass->size()*2;
-    for(uint i=0;i<glass->size();i++)
+    Fitness=glass->size()+1;
+
+    for(ushort r=0;r<glass->rows();r++)
+        for(ushort c=0;c<glass->cols();c++) {
+            if(glass->operator()(r,c)) {
+                if(visited.find(TokiRC(r,c))==visited.end())
+                    glass->operator()(r,c)=0;
+                else
+                Fitness--;
+            }
+        }
+
+    /*for(uint i=0;i<glass->size();i++) {
+        if(visited.find()
         if(glass->operator()(i))
             Fitness--;
+    }*/
 } else
     Fitness=attachedTargets-targetMap->size();
 
@@ -146,6 +163,8 @@ glassMap GlassBuilder::makeBridge(const TokiMap & _targetMap,walkableMap* walkab
     //初始化种群
     for(auto it=population.begin();it!=population.end();it++) {
         (*it).setOnes(_targetMap.rows(),_targetMap.cols());
+        for(uint i=0;i<(*it).size();i++)
+            (*it)(i)=randD()<=initializeTrueRate;
         for(auto jt=targetPoints.cbegin();jt!=targetPoints.cend();jt++)
             (*it)(TokiRow(*jt),TokiCol(*jt))=0;
     }
@@ -161,8 +180,8 @@ glassMap GlassBuilder::makeBridge(const TokiMap & _targetMap,walkableMap* walkab
 
 
 void GlassBuilder::caculateAll() {
-    qDebug("caculateAll");
-    std::queue<QFuture<double>> tasks;
+    //qDebug("caculateAll");
+    std::queue<QFuture<int>> tasks;
     for(int i=0;i<popSize;i++) {
         tasks.push(
                     QtConcurrent::run(caculateFitness,&population[i],&targetPoints)
@@ -178,26 +197,23 @@ void GlassBuilder::caculateAll() {
 }
 
 void GlassBuilder::select() {
-    qDebug("select");
-    ushort maxIdx=0,minIdx=0;
-    double maxVal=fitness[0],minVal=fitness[0];
+    //qDebug("select");
+    ushort maxIdx=0;
+    int maxVal=fitness[0];
     for(ushort i=0;i<popSize;i++) {
         if(fitness[i]>maxVal) {
             maxVal=fitness[i];
             maxIdx=i;
         }
-        if(fitness[i]<minVal) {
-            minVal=fitness[i];
-            minIdx=i;
-        }
     }
 
     eliteIndex=maxIdx;
-    population[minIdx]=population[maxIdx];
+    for(ushort i=0;i<popSize;i++)
+        if(fitness[i]<0&&i!=eliteIndex)population[i]=population[eliteIndex];
 }
 
 void GlassBuilder::crossover() {    
-    qDebug("crossover");
+    //qDebug("crossover");
     std::vector<ushort> crossoverLine;
     crossoverLine.resize(0);
 
@@ -224,11 +240,12 @@ void GlassBuilder::crossover() {
 
 void GlassBuilder::mutate() {
     ushort maxMutateTimes=std::max(1.0,ceil(mutateIntense*mutatePoints.size()));
+    if(generations*2>=maxGeneration)maxMutateTimes=1;
     for(ushort i=0;i<popSize;i++) {
         if(i==eliteIndex)continue;
 
         if(randD()<=mutateProb)
-            qDebug()<<"变异"<<maxMutateTimes<<"次";
+            //qDebug()<<"变异"<<maxMutateTimes<<"次";
             for(ushort mutateTimes=0;
                 mutateTimes<maxMutateTimes;
                 mutateTimes++) {
@@ -243,12 +260,17 @@ void GlassBuilder::mutate() {
 
 void GlassBuilder::run() {
     ushort failTimes=0;
-    double lastFitness=-1e10;
+    int lastFitness=-10000000;
     generations=0;
+    emit progressRangeSet(0,maxGeneration,0);
     while(true) {
         caculateAll();
         select();
         generations++;
+        if(generations%reportRate==0) {
+            emit progressAdd(reportRate);
+            emit keepAwake();
+        }
         qDebug()<<"第"<<generations<<"代,最高适应度"<<fitness[eliteIndex];
         if(lastFitness==fitness[eliteIndex])
             failTimes++;
@@ -261,7 +283,7 @@ void GlassBuilder::run() {
         if(generations>maxGeneration||failTimes>=maxFailTimes)
             break;
     }
-
+    emit progressRangeSet(0,maxGeneration,maxGeneration);
     caculateAll();
     select();
 }

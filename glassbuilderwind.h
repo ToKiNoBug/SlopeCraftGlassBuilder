@@ -20,6 +20,9 @@ public:
 
 private slots:
     void on_buildBridge_clicked();
+    void progressRangeSet(int,int,int);
+    void progressAdd(int);
+    void keepAwake();
 
 private:
     Ui::GlassBuilderWind *ui;

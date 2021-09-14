@@ -53,12 +53,14 @@ public:
     static const double crossoverProb;      //交叉概率
     static const double mutateProb;     //变异概率
     static const double mutateIntense;      //变异强度
+    static const double initializeTrueRate;
     GlassBuilder();
     glassMap makeBridge(const TokiMap & _targetMap,walkableMap* walkable=nullptr);
 #ifdef WITH_QT
 signals:
     void progressRangeSet(int min,int max,int val);
     void progressAdd(int);
+    void keepAwake();
 #else
 
 #endif
@@ -68,7 +70,7 @@ private:
     std::vector<TokiPos> mutatePoints;     //所有可以突变的位点，
 
     std::vector<glassMap> population;        //每个个体都是一个glassMap
-    std::vector<double> fitness;        //适应度函数，越大越好
+    std::vector<int> fitness;        //适应度函数，越大越好
     ushort rows;
     ushort cols;
     ushort eliteIndex;      //精英个体的索引位置
@@ -91,7 +93,7 @@ private:
 walkableMap glassMap2walkableMap(const glassMap * glass,
                                  const std::vector<TokiPos> * targetMap);
 
-double caculateFitness(const glassMap * glass,
+int caculateFitness(glassMap * glass,
                        const std::vector<TokiPos> * targetMap);
 
 void countConnected(ushort begRow,ushort begCol,
