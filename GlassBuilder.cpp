@@ -1,10 +1,10 @@
 #include "GlassBuilder.h"
 
-const ushort GlassBuilder::popSize=100;        //种群规模
+const ushort GlassBuilder::popSize=50;        //种群规模
 const ushort GlassBuilder::maxGeneration=500;      //最大代数
-const ushort GlassBuilder::maxFailTimes=50;
+const ushort GlassBuilder::maxFailTimes=25000;
 const double GlassBuilder::crossoverProb=0.8;      //交叉概率
-const double GlassBuilder::mutateProb=0.01;     //变异概率
+const double GlassBuilder::mutateProb=0.05;     //变异概率
 const double GlassBuilder::mutateIntense=1.0/50;      //变异强度
 const ARGB airColor=qRgb(255,255,255);
 const ARGB targetColor=qRgb(0,0,0);
@@ -25,7 +25,9 @@ int randi(int low,int high) {
 GlassBuilder::GlassBuilder()
 {
     population.resize(popSize);
+    population.shrink_to_fit();
     fitness.resize(popSize);
+    fitness.shrink_to_fit();
 }
 
 walkableMap glassMap2walkableMap(const glassMap * glass,
@@ -138,6 +140,8 @@ glassMap GlassBuilder::makeBridge(const TokiMap & _targetMap,walkableMap* walkab
             else
                 mutatePoints.push_back(TokiRC(r,c));
         }
+    targetPoints.shrink_to_fit();
+    mutatePoints.shrink_to_fit();
 
     //初始化种群
     for(auto it=population.begin();it!=population.end();it++) {
@@ -157,6 +161,7 @@ glassMap GlassBuilder::makeBridge(const TokiMap & _targetMap,walkableMap* walkab
 
 
 void GlassBuilder::caculateAll() {
+    qDebug("caculateAll");
     std::queue<QFuture<double>> tasks;
     for(int i=0;i<popSize;i++) {
         tasks.push(
@@ -166,13 +171,15 @@ void GlassBuilder::caculateAll() {
     int i=0;
     while (!tasks.empty()) {
         tasks.front().waitForFinished();
-        fitness[i]=tasks.front().result();
+        //qDebug()<<i;
+        fitness[i++]=tasks.front().result();
         tasks.pop();
     }
 }
 
 void GlassBuilder::select() {
-    ushort maxIdx,minIdx;
+    qDebug("select");
+    ushort maxIdx=0,minIdx=0;
     double maxVal=fitness[0],minVal=fitness[0];
     for(ushort i=0;i<popSize;i++) {
         if(fitness[i]>maxVal) {
@@ -189,7 +196,8 @@ void GlassBuilder::select() {
     population[minIdx]=population[maxIdx];
 }
 
-void GlassBuilder::crossover() {
+void GlassBuilder::crossover() {    
+    qDebug("crossover");
     std::vector<ushort> crossoverLine;
     crossoverLine.resize(0);
 
@@ -215,12 +223,14 @@ void GlassBuilder::crossover() {
 }
 
 void GlassBuilder::mutate() {
+    ushort maxMutateTimes=std::max(1.0,ceil(mutateIntense*mutatePoints.size()));
     for(ushort i=0;i<popSize;i++) {
         if(i==eliteIndex)continue;
 
         if(randD()<=mutateProb)
+            qDebug()<<"变异"<<maxMutateTimes<<"次";
             for(ushort mutateTimes=0;
-                mutateTimes<ceil(mutateIntense*mutatePoints.size());
+                mutateTimes<maxMutateTimes;
                 mutateTimes++) {
 
                 uint mutateIdx=randi(0,mutatePoints.size()-1);
