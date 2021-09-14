@@ -4,7 +4,7 @@ const ushort GlassBuilder::popSize=100;        //种群规模
 const ushort GlassBuilder::maxGeneration=500;      //最大代数
 const double GlassBuilder::crossoverProb=0.8;      //交叉概率
 const double GlassBuilder::mutateProb=0.01;     //变异概率
-const double GlassBuilder::mutateIntense=0.02;      //变异强度
+const double GlassBuilder::mutateIntense=1.0/50;      //变异强度
 const ARGB airColor=qRgb(255,255,255);
 const ARGB targetColor=qRgb(0,0,0);
 const ARGB glassColor=qRgb(128,128,128);
@@ -206,4 +206,21 @@ void GlassBuilder::crossover() {
                     );
     }
 
+}
+
+void GlassBuilder::mutate() {
+    for(ushort i=0;i<popSize;i++) {
+        if(i==eliteIndex)continue;
+
+        if(randD()<=mutateProb)
+            for(ushort mutateTimes=0;
+                mutateTimes<ceil(mutateIntense*mutatePoints.size());
+                mutateTimes++) {
+
+                uint mutateIdx=randi(0,mutatePoints.size()-1);
+                TokiPos point=mutatePoints[mutateIdx];
+                population[i](TokiRow(point),TokiCol(point))=!population[i](TokiRow(point),TokiCol(point));
+            }
+
+    }
 }
