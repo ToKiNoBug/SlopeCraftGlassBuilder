@@ -236,10 +236,10 @@ void GlassBuilder::run() {
     double lastFitness=-1e10;
     generations=0;
     while(true) {
-        generations++;
-        qDebug()<<"第"<<generations<<"代";
         caculateAll();
         select();
+        generations++;
+        qDebug()<<"第"<<generations<<"代,最高适应度"<<fitness[eliteIndex];
         if(lastFitness==fitness[eliteIndex])
             failTimes++;
         else

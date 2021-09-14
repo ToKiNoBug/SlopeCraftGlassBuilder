@@ -40,6 +40,8 @@ GlassBuilderWind::~GlassBuilderWind()
 
 
 void GlassBuilderWind::on_buildBridge_clicked() {
-    glassMap result=algo->makeBridge(raw);
+    glassMap result=algo->makeBridge(raw,&builded);
+    ui->after->setPixmap(QPixmap::fromImage(
+                             EImage2QImage(TokiMap2EImage(builded),4)));
 }
 

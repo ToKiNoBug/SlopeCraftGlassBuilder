@@ -18,6 +18,9 @@ public:
     GlassBuilderWind(QWidget *parent = nullptr);
     ~GlassBuilderWind();
 
+private slots:
+    void on_buildBridge_clicked();
+
 private:
     Ui::GlassBuilderWind *ui;
     GlassBuilder * algo;
