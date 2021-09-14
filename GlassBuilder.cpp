@@ -125,6 +125,8 @@ glassMap GlassBuilder::makeBridge(const TokiMap & _targetMap) {
     /*std::vector<TokiPos> targetPoints;   //要连接的目标点
     std::vector<TokiPos> forbiddenPoints;    //不可以搭桥的地方
     std::vector<TokiPos> mutatePoints;     //所有可以突变的位点，*/
+    rows=_targetMap.rows();
+    cols=_targetMap.cols();
     targetPoints.clear();
     //forbiddenPoints.clear();
     mutatePoints.clear();
@@ -179,4 +181,29 @@ void GlassBuilder::select() {
 
     eliteIndex=maxIdx;
     population[minIdx]=population[maxIdx];
+}
+
+void GlassBuilder::crossover() {
+    std::vector<ushort> crossoverLine;
+    crossoverLine.resize(0);
+
+    for(ushort i=0;i<popSize;i++) {
+        if(i==eliteIndex)continue;
+        if(randD()<=crossoverProb)
+            crossoverLine.push_back(i);
+    }
+    std::random_shuffle(crossoverLine.begin(),crossoverLine.end());
+
+    if(crossoverLine.size()%2==1)
+        crossoverLine.pop_back();
+
+    for(ushort i=0;i<crossoverLine.size()/2;i++) {
+        ushort crossoverIdx=randi(1,population[0].cols()-1);
+        ushort A=crossoverLine[2*i];
+        ushort B=crossoverLine[2*i+1];
+        population[A].leftCols(crossoverIdx).swap(
+                    population[B].leftCols(crossoverIdx)
+                    );
+    }
+
 }
