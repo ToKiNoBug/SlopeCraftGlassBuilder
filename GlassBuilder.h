@@ -49,17 +49,18 @@ public:
     };
     static const ushort popSize;        //种群规模
     static const ushort maxGeneration;      //最大代数
+    static const ushort maxFailTimes;
     static const double crossoverProb;      //交叉概率
     static const double mutateProb;     //变异概率
     static const double mutateIntense;      //变异强度
     GlassBuilder();
-    glassMap makeBridge(const TokiMap & _targetMap);
-    const TokiMap& getTargetMap() const;
-    const TokiMap& getBuildableMap() const;
+    glassMap makeBridge(const TokiMap & _targetMap,walkableMap* walkable=nullptr);
 #ifdef WITH_QT
 signals:
     void progressRangeSet(int min,int max,int val);
     void progressAdd(int);
+#else
+
 #endif
 private:
     std::vector<TokiPos> targetPoints;   //要连接的目标点，也是不可以搭桥的地方
@@ -84,7 +85,7 @@ private:
     void select();
     void crossover();
     void mutate();
-    uint dims() const;
+    //uint dims() const;
 };
 
 walkableMap glassMap2walkableMap(const glassMap * glass,

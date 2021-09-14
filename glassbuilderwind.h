@@ -20,7 +20,7 @@ public:
 
 private:
     Ui::GlassBuilderWind *ui;
-
+    GlassBuilder * algo;
     TokiMap raw;
     TokiMap builded;
 };

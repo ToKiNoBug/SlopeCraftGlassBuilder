@@ -2,6 +2,7 @@
 
 const ushort GlassBuilder::popSize=100;        //种群规模
 const ushort GlassBuilder::maxGeneration=500;      //最大代数
+const ushort GlassBuilder::maxFailTimes=50;
 const double GlassBuilder::crossoverProb=0.8;      //交叉概率
 const double GlassBuilder::mutateProb=0.01;     //变异概率
 const double GlassBuilder::mutateIntense=1.0/50;      //变异强度
@@ -120,7 +121,7 @@ EImage TokiMap2EImage(const TokiMap& tm) {
     return result;
 }
 
-glassMap GlassBuilder::makeBridge(const TokiMap & _targetMap) {
+glassMap GlassBuilder::makeBridge(const TokiMap & _targetMap,walkableMap* walkable) {
 
     /*std::vector<TokiPos> targetPoints;   //要连接的目标点
     std::vector<TokiPos> forbiddenPoints;    //不可以搭桥的地方
@@ -146,6 +147,11 @@ glassMap GlassBuilder::makeBridge(const TokiMap & _targetMap) {
     }
 
     run();
+
+    if(walkable!=nullptr) {
+        *walkable=glassMap2walkableMap(&population[eliteIndex],&targetPoints);
+    }
+
     return population[eliteIndex];
 }
 
@@ -223,4 +229,29 @@ void GlassBuilder::mutate() {
             }
 
     }
+}
+
+void GlassBuilder::run() {
+    ushort failTimes=0;
+    double lastFitness=-1e10;
+    generations=0;
+    while(true) {
+        generations++;
+        qDebug()<<"第"<<generations<<"代";
+        caculateAll();
+        select();
+        if(lastFitness==fitness[eliteIndex])
+            failTimes++;
+        else
+            failTimes=0;
+        lastFitness=fitness[eliteIndex];
+        crossover();
+        mutate();
+
+        if(generations>maxGeneration||failTimes>=maxFailTimes)
+            break;
+    }
+
+    caculateAll();
+    select();
 }

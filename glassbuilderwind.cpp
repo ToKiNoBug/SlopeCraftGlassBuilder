@@ -6,6 +6,9 @@ GlassBuilderWind::GlassBuilderWind(QWidget *parent)
     , ui(new Ui::GlassBuilderWind)
 {
     ui->setupUi(this);
+
+    algo=new GlassBuilder;
+
     raw.setZero(64,64);
     short targets[][2]={{0,0},{60,6},{5,34},{30,60},{6,60},{50,40}};
 
@@ -31,6 +34,12 @@ QImage EImage2QImage(const EImage & ei,ushort scale) {
 
 GlassBuilderWind::~GlassBuilderWind()
 {
+    delete algo;
     delete ui;
+}
+
+
+void GlassBuilderWind::on_buildBridge_clicked() {
+    glassMap result=algo->makeBridge(raw);
 }
 
