@@ -5,11 +5,16 @@ const ushort GlassBuilder::maxGeneration=500;      //最大代数
 const double GlassBuilder::crossoverProb=0.8;      //交叉概率
 const double GlassBuilder::mutateProb=0.01;     //变异概率
 const double GlassBuilder::mutateIntense=0.02;      //变异强度
+const ARGB airColor=qRgb(255,255,255);
+const ARGB targetColor=qRgb(0,0,0);
+const ARGB glassColor=qRgb(128,128,128);
+
 double randD(){
     static std::default_random_engine generator(time(0));
     static std::uniform_real_distribution<double> rander(0,1);
     return rander(generator);
 }
+
 int randi(int low,int high) {
     static std::default_random_engine generator(time(0));
     static std::uniform_int_distribution<int> rander(low,high);
@@ -19,6 +24,15 @@ int randi(int low,int high) {
 GlassBuilder::GlassBuilder()
 {
     population.resize(popSize);
+    fitness.resize(popSize);
+}
+
+walkableMap glassMap2walkableMap(const glassMap * glass,
+                                 const std::vector<TokiPos> * targetMap) {
+    walkableMap res=*glass;
+    for(auto jt=targetMap->cbegin();jt!=targetMap->cend();jt++)
+        res(TokiRow(*jt),TokiCol(*jt))=GlassBuilder::blockType::target;
+    return res;
 }
 
 void countConnected(ushort begRow,ushort begCol,
@@ -55,4 +69,114 @@ if(begCol+1<walkable.cols()&&
         (visited.find(TokiRC(begRow,begCol+1))==visited.end())) {
     countConnected(begRow,begCol+1,walkable,visited);
 }
+}
+
+double caculateFitness(const glassMap * glass,
+                       const std::vector<TokiPos> * targetMap) {
+walkableMap walkable=glassMap2walkableMap(glass,targetMap);
+std::unordered_set<TokiPos> visited;
+visited.clear();
+
+TokiPos startPoint;
+for(short r=0;r<glass->rows();r++)
+    for(short c=0;c<glass->cols();c++) {
+        if(!walkable(r,c)) continue;
+        startPoint=TokiRC(r,c);
+        c=glass->cols();
+        r=glass->rows();
+    }
+
+countConnected(TokiRow(startPoint),TokiCol(startPoint),walkable,visited);
+
+uint attachedTargets=0;
+for(auto it=targetMap->cbegin();it!=targetMap->cend();it++) {
+    if(visited.find(*it)!=visited.end())
+        attachedTargets++;
+}
+
+double Fitness=0;
+
+if(attachedTargets>=targetMap->size()) {
+    Fitness=glass->size()*2;
+    for(uint i=0;i<glass->size();i++)
+        if(glass->operator()(i))
+            Fitness--;
+} else
+    Fitness=attachedTargets-targetMap->size();
+
+return Fitness;
+}
+
+EImage TokiMap2EImage(const TokiMap& tm) {
+    EImage result(tm.rows(),tm.cols());
+    result.setConstant(airColor);
+    for(ushort r=0;r<tm.rows();r++)
+        for(ushort c=0;c<tm.cols();c++) {
+            if(tm(r,c)==1)
+                result(r,c)=glassColor;
+            if(tm(r,c)>1)
+                result(r,c)=targetColor;
+        }
+    return result;
+}
+
+glassMap GlassBuilder::makeBridge(const TokiMap & _targetMap) {
+
+    /*std::vector<TokiPos> targetPoints;   //要连接的目标点
+    std::vector<TokiPos> forbiddenPoints;    //不可以搭桥的地方
+    std::vector<TokiPos> mutatePoints;     //所有可以突变的位点，*/
+    targetPoints.clear();
+    //forbiddenPoints.clear();
+    mutatePoints.clear();
+    for(short r=0;r<_targetMap.rows();r++)
+        for(short c=0;c<_targetMap.cols();c++) {
+            if(_targetMap(r,c))
+                targetPoints.push_back(TokiRC(r,c));
+            else
+                mutatePoints.push_back(TokiRC(r,c));
+        }
+
+    //初始化种群
+    for(auto it=population.begin();it!=population.end();it++) {
+        (*it).setOnes(_targetMap.rows(),_targetMap.cols());
+        for(auto jt=targetPoints.cbegin();jt!=targetPoints.cend();jt++)
+            (*it)(TokiRow(*jt),TokiCol(*jt))=0;
+    }
+
+    run();
+    return population[eliteIndex];
+}
+
+
+void GlassBuilder::caculateAll() {
+    std::queue<QFuture<double>> tasks;
+    for(int i=0;i<popSize;i++) {
+        tasks.push(
+                    QtConcurrent::run(caculateFitness,&population[i],&targetPoints)
+                    );
+    }
+    int i=0;
+    while (!tasks.empty()) {
+        tasks.front().waitForFinished();
+        fitness[i]=tasks.front().result();
+        tasks.pop();
+    }
+}
+
+void GlassBuilder::select() {
+    ushort maxIdx,minIdx;
+    double maxVal=fitness[0],minVal=fitness[0];
+    for(ushort i=0;i<popSize;i++) {
+        if(fitness[i]>maxVal) {
+            maxVal=fitness[i];
+            maxIdx=i;
+        }
+        if(fitness[i]<minVal) {
+            minVal=fitness[i];
+            minIdx=i;
+        }
+    }
+
+    eliteIndex=maxIdx;
+    population[minIdx]=population[maxIdx];
 }

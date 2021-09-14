@@ -2,10 +2,13 @@
 #define GLASSBUILDERWIND_H
 
 #include <QMainWindow>
+#include <QImage>
 #include "GlassBuilder.h"
 QT_BEGIN_NAMESPACE
 namespace Ui { class GlassBuilderWind; }
 QT_END_NAMESPACE
+
+
 
 class GlassBuilderWind : public QMainWindow
 {
@@ -17,5 +20,10 @@ public:
 
 private:
     Ui::GlassBuilderWind *ui;
+
+    TokiMap raw;
+    TokiMap builded;
 };
+
+QImage EImage2QImage(const EImage & ei,ushort scale);
 #endif // GLASSBUILDERWIND_H
