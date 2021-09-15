@@ -3,6 +3,7 @@ QT       += core gui concurrent
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 INCLUDEPATH += D:/eigen-3.3.9 \
+                               D:/boost_1_66_0 \
                                ../SlopeCraft/Kernel
 
 CONFIG += c++11
@@ -14,12 +15,14 @@ CONFIG += c++11
 SOURCES += \
     ../SlopeCraft/Kernel/WaterItem.cpp \
     GlassBuilder.cpp \
+    PrimGlassBuilder.cpp \
     main.cpp \
     glassbuilderwind.cpp
 
 HEADERS += \
     ../SlopeCraft/Kernel/WaterItem.h \
     GlassBuilder.h \
+    PrimGlassBuilder.h \
     glassbuilderwind.h
 
 FORMS += \

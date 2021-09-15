@@ -143,7 +143,6 @@ EImage TokiMap2EImage(const TokiMap& tm) {
 glassMap GlassBuilder::makeBridge(const TokiMap & _targetMap,walkableMap* walkable) {
 
     /*std::vector<TokiPos> targetPoints;   //要连接的目标点
-    std::vector<TokiPos> forbiddenPoints;    //不可以搭桥的地方
     std::vector<TokiPos> mutatePoints;     //所有可以突变的位点，*/
     rows=_targetMap.rows();
     cols=_targetMap.cols();
