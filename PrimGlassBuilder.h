@@ -16,6 +16,7 @@
 #include <unordered_set>
 #include <random>
 #include <cmath>
+#include <ctime>
 #include "WaterItem.h"
 
 #include <QtConcurrent>

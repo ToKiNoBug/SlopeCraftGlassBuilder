@@ -75,6 +75,7 @@ PrimGlassBuilder::PrimGlassBuilder()
 
 glassMap PrimGlassBuilder::makeBridge(const TokiMap & _targetMap,
                                       walkableMap* walkable) {
+    clock_t lastTime=std::clock();
     const int rowCount=ceil(double(_targetMap.rows())/130);
     const int colCount=ceil(double(_targetMap.cols())/130);
 
@@ -90,10 +91,10 @@ glassMap PrimGlassBuilder::makeBridge(const TokiMap & _targetMap,
         walkableMaps[r].resize(colCount);
         targetMaps[r].resize(colCount);
         for(int c=0;c<colCount;c++) {
-            qDebug()<<"targetMaps["<<r<<"]["<<c<<"]=_targetMap.block("
+            /*qDebug()<<"targetMaps["<<r<<"]["<<c<<"]=_targetMap.block("
             <<130*r<<','<<130*c<<','
             <<std::min((long long)(130),_targetMap.rows()-r*130)<<','
-            <<std::min((long long)(130),_targetMap.cols()-c*130)<<");";
+            <<std::min((long long)(130),_targetMap.cols()-c*130)<<");";*/
             targetMaps[r][c]=_targetMap.block(130*r,130*c,
                                               std::min((long long)(130),_targetMap.rows()-r*130),
                                               std::min((long long)(130),_targetMap.cols()-c*130));
@@ -112,7 +113,7 @@ glassMap PrimGlassBuilder::makeBridge(const TokiMap & _targetMap,
     qDebug("分区分块完毕，开始在每个分区内搭桥");
     for(int r=0;r<rowCount;r++) {
         for(int c=0;c<colCount;c++) {
-            qDebug()<<"开始处理第["<<r<<","<<c<<"]块分区";
+            //qDebug()<<"开始处理第["<<r<<","<<c<<"]块分区";
             glassMaps[r][c]=
                     algos[r][c]->make4SingleMap(targetMaps[r][c],
                                         (walkable==nullptr)?nullptr:(&walkableMaps[r][c]));
@@ -147,17 +148,16 @@ glassMap PrimGlassBuilder::makeBridge(const TokiMap & _targetMap,
 
     for(int r=0;r<rowCount;r++)
         for(int c=0;c<colCount;c++) {
-            qDebug()<<"result.block("<<130*r<<','<<130*c<<','
+            /*qDebug()<<"result.block("<<130*r<<','<<130*c<<','
             <<targetMaps[r][c].rows()<<','<<targetMaps[r][c].cols()<<")=glassMaps["
-            <<r<<"]["<<c<<"];";
+            <<r<<"]["<<c<<"];";*/
             result.block(130*r,130*c,targetMaps[r][c].rows(),targetMaps[r][c].cols())
                     =glassMaps[r][c];
-            qDebug("walkable");
             if(walkable!=nullptr) {
-                qDebug()<<"size(walkableMap)=["<<walkableMaps[r][c].rows()<<','<<walkableMaps[r][c].cols()<<"]";
+                /*qDebug()<<"size(walkableMap)=["<<walkableMaps[r][c].rows()<<','<<walkableMaps[r][c].cols()<<"]";
                 qDebug()<<"walkable->block("<<130*r<<','<<130*c<<','
                 <<targetMaps[r][c].rows()<<','<<targetMaps[r][c].cols()<<")=walkableMaps["
-                <<r<<"]["<<c<<"];";
+                <<r<<"]["<<c<<"];";*/
                 walkable->block(130*r,130*c,
                                 targetMaps[r][c].rows(),targetMaps[r][c].cols())
                         =walkableMaps[r][c];
@@ -174,6 +174,8 @@ glassMap PrimGlassBuilder::makeBridge(const TokiMap & _targetMap,
     for(int r=0;r<rowCount;r++)
         for(int c=0;c<colCount;c++)
             delete algos[r][c];
+
+    qDebug()<<"用时"<<std::clock()-lastTime<<"毫秒";
 
 return result;
 }
@@ -237,9 +239,10 @@ edge PrimGlassBuilder::connectSingleMaps(
     edge current;
 
     edge min(0,0,65535,65535);
+    min.lengthSquare=0x7FFFFFFF;
 
     for(auto it=map1->targetPoints.cbegin();it!=map1->targetPoints.cend();it++)
-        for(auto jt=map1->targetPoints.cbegin();jt!=map1->targetPoints.cend();jt++) {
+        for(auto jt=map2->targetPoints.cbegin();jt!=map2->targetPoints.cend();jt++) {
             r1=offsetR1+TokiRow(*it);
             c1=offsetC1+TokiCol(*it);
             r2=offsetR2+TokiRow(*jt);
@@ -289,7 +292,6 @@ void PrimGlassBuilder::runPrim() {
 
         //从列表中第一个元素开始搜索第一个可行边
         for(;;) {
-
             if(selectedEdge==edges.end()) {
                 qDebug("错误！找不到可行边");
                 break;
@@ -309,10 +311,11 @@ void PrimGlassBuilder::runPrim() {
                 //找到了第一条可行的边
                 break;
             }
+            selectedEdge++;
         }
 
         //从找到的第一条边开始，寻找长度最小的可行边
-        for(auto it=selectedEdge;it!=edges.end();it++) {
+        for(auto it=selectedEdge;it!=edges.end();) {
             //if(selectedEdge->lengthSquare<=2)break;
             TokiPos x=it->beg,y=it->end;
             bool fx=found.find(x)!=found.end();
@@ -328,7 +331,7 @@ void PrimGlassBuilder::runPrim() {
                 if(it->lengthSquare<selectedEdge->lengthSquare)
                     selectedEdge=it;
             }
-
+            it++;
         }
 
         //将选中边装入树中，
