@@ -78,6 +78,9 @@ public:
     void drawEdge(glassMap &,bool drawHead=false) const;
 };
 
+glassMap connectBetweenLayers(const TokiMap & ,const TokiMap & ,
+                          walkableMap* walkable);
+//返回值是架构在相对较高的一层上的，walkable是各层俯视图叠加
 
 #ifdef WITH_QT
 class PrimGlassBuilder : public QObject
@@ -121,9 +124,10 @@ private:
 };
 
 EImage TokiMap2EImage(const TokiMap&);
+
 double randD();
 
-void defaultProgressRangeSet(int,int,int){};
-void defaultProgressAdd(int){};
-void defaultKeepAwake(){};
+void defaultProgressRangeSet(int,int,int);
+void defaultProgressAdd(int);
+void defaultKeepAwake();
 #endif // PRIMGLASSBUILDER_H

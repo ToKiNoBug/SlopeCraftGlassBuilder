@@ -33,6 +33,16 @@ double randD(){
     return rander(generator);
 }
 
+void defaultProgressRangeSet(int,int,int) {
+
+}
+void defaultProgressAdd(int) {
+
+}
+void defaultKeepAwake() {
+
+}
+
 edge::edge() {
     beg=TokiRC(0,0);
     end=TokiRC(0,0);
@@ -389,5 +399,54 @@ EImage TokiMap2EImage(const TokiMap& tm) {
             if(tm(r,c)>1)
                 result(r,c)=targetColor;
         }
+    return result;
+}
+
+glassMap connectBetweenLayers(const TokiMap & map1,const TokiMap & map2,
+                              walkableMap* walkable) {
+    std::list<TokiPos> target1,target2;
+    target1.clear();
+    target2.clear();
+    for(int r=0;r<map1.rows();r++)
+        for(int c=0;c<map1.cols();c++) {
+            if(map1(r,c)>=PrimGlassBuilder::target)
+                target1.push_back(TokiRC(r,c));
+            if(map2(r,c)>=PrimGlassBuilder::target)
+                target2.push_back(TokiRC(r,c));
+        }
+    std::list<edge> linkEdges;
+    linkEdges.clear();
+    edge min,temp;
+    for(auto t1=target1.cbegin();t1!=target1.cend();t1++) {
+        min.lengthSquare=0x7FFFFFFF;
+        for(auto t2=target2.cbegin();t2!=target2.cend();t2++) {
+            temp=edge(*t1,*t2);
+            if(min.lengthSquare>temp.lengthSquare)
+                min=temp;
+            if(min.lengthSquare<=2)
+                break;
+        }
+        linkEdges.push_back(min);
+    }
+
+    glassMap result;
+    result.setZero(map1.rows(),map1.cols());
+
+    for(auto it=linkEdges.cbegin();it!=linkEdges.cend();it++)
+        it->drawEdge(result);
+
+    if(walkable!=nullptr)
+        *walkable=result;
+
+    for(auto t=target1.cbegin();t!=target1.cend();t++) {
+        result(TokiRow(*t),TokiCol(*t))=PrimGlassBuilder::air;
+        if(walkable!=nullptr)
+            walkable->operator()(TokiRow(*t),TokiCol(*t))=PrimGlassBuilder::target;
+    }
+    for(auto t=target2.cbegin();t!=target2.cend();t++) {
+        result(TokiRow(*t),TokiCol(*t))=PrimGlassBuilder::air;
+        if(walkable!=nullptr)
+            walkable->operator()(TokiRow(*t),TokiCol(*t))=PrimGlassBuilder::target;
+    }
     return result;
 }
