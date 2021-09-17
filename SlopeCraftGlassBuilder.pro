@@ -13,14 +13,12 @@ CONFIG += c++11
 
 SOURCES += \
     ../SlopeCraft/Kernel/WaterItem.cpp \
-    GlassBuilder.cpp \
     PrimGlassBuilder.cpp \
     main.cpp \
     glassbuilderwind.cpp
 
 HEADERS += \
     ../SlopeCraft/Kernel/WaterItem.h \
-    GlassBuilder.h \
     PrimGlassBuilder.h \
     glassbuilderwind.h
 
