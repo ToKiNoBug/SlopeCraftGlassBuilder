@@ -3,7 +3,6 @@ QT       += core gui concurrent
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 INCLUDEPATH += D:/eigen-3.3.9 \
-                               D:/boost_1_66_0 \
                                ../SlopeCraft/Kernel
 
 CONFIG += c++11

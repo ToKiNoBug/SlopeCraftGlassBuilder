@@ -1,5 +1,58 @@
 #include "PrimGlassBuilder.h"
 const int INF=0x7FFFFFFF;
+
+edge::edge() {
+    beg=TokiRC(0,0);
+    end=TokiRC(0,0);
+    lengthSquare=0;
+}
+
+edge::edge(TokiPos A,TokiPos B) {
+    ushort r1=TokiRow(A),c1=TokiCol(A);
+    ushort r2=TokiRow(B),c2=TokiCol(B);
+    beg=A;
+    end=B;
+    int rowSpan=r1-r2;
+    int colSpan=c1-c2;
+    lengthSquare=(rowSpan*rowSpan+colSpan*colSpan);
+}
+
+edge::edge(ushort r1,ushort c1,ushort r2,ushort c2) {
+    beg=TokiRC(r1,c1);
+    end=TokiRC(r2,c2);
+    int rowSpan=r1-r2;
+    int colSpan=c1-c2;
+    lengthSquare=(rowSpan*rowSpan+colSpan*colSpan);
+}
+
+bool edge::connectWith(TokiPos P) const {
+    return (beg==P)||(end==P);
+}
+
+void edge::drawEdge(glassMap & map) const {
+    if(lengthSquare<=2)return;
+    float length=sqrt(lengthSquare);
+    Vector2f startPoint(TokiRow(beg),TokiCol(beg));
+    Vector2f endPoint(TokiRow(end),TokiCol(end));
+    Vector2f step=(endPoint-startPoint)/ceil(2.0*length);
+    Vector2f cur;
+    int stepCount=ceil(2.0*length);
+    int r,c;
+    for(int i=1;i<stepCount;i++) {
+        cur=i*step+startPoint;
+        r=floor(cur(0));
+        c=floor(cur(1));
+        if(r>=0&&r<map.rows()&&c>=0&&c<map.cols()) {
+            map(r,c)=1;
+            continue;
+        }
+        r=ceil(cur(0));
+        c=ceil(cur(1));
+        if(r>=0&&r<map.rows()&&c>=0&&c<map.cols())
+            map(r,c)=1;
+    }
+}
+
 #ifdef WITH_QT
 PrimGlassBuilder::PrimGlassBuilder(QObject *parent) : QObject(parent)
 #else
@@ -19,30 +72,16 @@ glassMap PrimGlassBuilder::makeBridge(const TokiMap & _targetMap,
                 targetPoints.push_back(TokiRC(r,c));
         }
     targetPoints.shrink_to_fit();
-
-    addNodesEdgesToGraph();
+    edges.clear();
+    tree.clear();
+    addEdgesToGraph();
     runPrim();
 
     glassMap result(_targetMap.rows(),_targetMap.cols());
     result.setZero();
 
-    for(auto it=minSpawningTree.cbegin();it!=minSpawningTree.cend();it++){
-        Vertex head=source(*it,graph);
-        Vertex tail=target(*it,graph);
-        TokiPos A=targetPoints[graph[head]];
-        TokiPos B=targetPoints[graph[tail]];
-        Vector2f start(TokiRow(A),TokiCol(A));
-        Vector2f end(TokiRow(B),TokiCol(B));
-        qDebug()<<"连接"<<'['<<start(0)<<','<<start(1)<<']'<<"与"<<'['<<end(0)<<','<<end(1)<<']';
-        int stepCount=(end-start).array().abs().maxCoeff();
-        Vector2f step=(end-start)/stepCount;
-        Vector2f cur;
-        for(int j=1;j<stepCount;j++) {
-            cur=start+j*step;
-            result(std::floor(cur(0)),std::floor(cur(1)))=1;
-            result(std::ceil(cur(0)),std::ceil(cur(1)))=1;
-        }
-    }
+    for(auto it=tree.cbegin();it!=tree.cend();it++)
+        it->drawEdge(result);
 
     if(walkable!=nullptr)
         *walkable=result;
@@ -54,26 +93,93 @@ glassMap PrimGlassBuilder::makeBridge(const TokiMap & _targetMap,
     return result;
 }
 
-void PrimGlassBuilder::addNodesEdgesToGraph() {
-graph.clear();
-/*
-for(index i=0;i<targetPoints.size();i++)
-    boost::add_vertex(i,graph);*/
-int length;
-TokiPos A,B;
-for(index i=0;i<targetPoints.size();i++)
-    for(index j=i+1;j<targetPoints.size();j++) {
-        A=targetPoints[i];
-        B=targetPoints[j];
-        length=sqrt((TokiRow(A)-TokiRow(B))*(TokiRow(A)-TokiRow(B))+
-                    (TokiCol(A)-TokiCol(B))*(TokiCol(A)-TokiCol(B)));
-        boost::add_edge(i,j,length,graph);
-    }
-qDebug("插入了所有的边");
+
+void PrimGlassBuilder::addEdgesToGraph() {
+    edges.clear();
+
+    for(index i=0;i<targetPoints.size();i++)
+        for(index j=i+1;j<targetPoints.size();j++) {
+            edges.push_back(edge(targetPoints[i],targetPoints[j]));
+        }
+
+    qDebug("插入了所有的边");
 }
 
+
 void PrimGlassBuilder::runPrim() {
-    minSpawningTree.resize(boost::num_vertices(graph)-1);
-    boost::prim_minimum_spanning_tree(graph,&minSpawningTree[0]);
+    tree.clear();
+    //TokiPos x,y;
+    std::unordered_set<TokiPos> found,unsearched;
+    found.clear();
+    unsearched.clear();
+    found.emplace(targetPoints[0]);
+
+    for(auto i=targetPoints.cbegin();;) {
+        i++;
+        if(i==targetPoints.cend())
+            break;
+
+        unsearched.emplace(*i);
+    }
+
+    while(!unsearched.empty()) {
+        auto selectedEdge=edges.begin();
+
+        //从列表中第一个元素开始搜索第一个可行边
+        for(;;) {
+
+            if(selectedEdge==edges.end()) {
+                qDebug("错误！找不到可行边");
+                break;
+            }
+            TokiPos z=selectedEdge->beg;
+            TokiPos w=selectedEdge->end;
+            bool fz=found.find(z)!=found.end();
+            bool fw=found.find(w)!=found.end();
+
+            if(fz&&fw) {
+                selectedEdge=edges.erase(selectedEdge);//如果一条边的首尾都是已经被连接到的点，那么移除这条边
+                continue;
+            }
+            bool uz=unsearched.find(z)!=unsearched.end();
+            bool uw=unsearched.find(w)!=unsearched.end();
+            if((fz&&uw)||(fw&&uz)) {
+                //找到了第一条可行的边
+                break;
+            }
+        }
+
+        //从找到的第一条边开始，寻找长度最小的可行边
+        for(auto it=selectedEdge;it!=edges.end();it++) {
+            TokiPos x=it->beg,y=it->end;
+            bool fx=found.find(x)!=found.end();
+            bool fy=found.find(y)!=found.end();
+            if(fx&&fy) {
+                it=edges.erase(it);//如果一条边的首尾都是已经被连接到的点，那么移除这条边
+                continue;
+            }
+            bool ux=unsearched.find(x)!=unsearched.end();
+            bool uy=unsearched.find(y)!=unsearched.end();
+
+            if((fx&&uy)||(fy&&ux)) {
+                if(it->lengthSquare<selectedEdge->lengthSquare)
+                    selectedEdge=it;
+            }
+
+        }
+
+        //将选中边装入树中，
+        //并从集合unsearched中删除选中边的两个端点，
+        //向集合found中加入选中边的两个端点
+        {
+            TokiPos x=selectedEdge->beg;
+            TokiPos y=selectedEdge->end;
+            found.emplace(x);
+            found.emplace(y);
+            unsearched.erase(x);
+            unsearched.erase(y);
+            tree.push_back(*selectedEdge);
+        }
+    }
     qDebug("prim算法完毕");
 }

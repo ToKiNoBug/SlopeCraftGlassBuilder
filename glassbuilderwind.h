@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QImage>
 #include "GlassBuilder.h"
+#include "PrimGlassBuilder.h"
 QT_BEGIN_NAMESPACE
 namespace Ui { class GlassBuilderWind; }
 QT_END_NAMESPACE
@@ -26,7 +27,7 @@ private slots:
 
 private:
     Ui::GlassBuilderWind *ui;
-    GlassBuilder * algo;
+    PrimGlassBuilder * algo;
     TokiMap raw;
     TokiMap builded;
 };

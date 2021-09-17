@@ -7,10 +7,10 @@ GlassBuilderWind::GlassBuilderWind(QWidget *parent)
 {
     ui->setupUi(this);
 
-    algo=new GlassBuilder;
+    algo=new PrimGlassBuilder;
 
     raw.setZero(64,64);
-    short targets[][2]={{0,0},{60,6},{5,34},{30,60},{6,60},{50,40},{20,30},{20,3}};
+    //short targets[][2]={{0,0},{60,6},{5,34},{30,60},{6,60},{50,40},{20,30},{20,3}};
 
     for(ushort r=0;r<raw.rows();r++)
         for(ushort c=0;c<raw.cols();c++) {
@@ -26,11 +26,11 @@ GlassBuilderWind::GlassBuilderWind(QWidget *parent)
     QImage temp=EImage2QImage(TokiMap2EImage(raw),4);
     ui->before->setPixmap(QPixmap::fromImage(temp));
 
-    connect(algo,&GlassBuilder::progressRangeSet,
+    connect(algo,&PrimGlassBuilder::progressRangeSet,
             this,&GlassBuilderWind::progressRangeSet);
-    connect(algo,&GlassBuilder::progressAdd,
+    connect(algo,&PrimGlassBuilder::progressAdd,
             this,&GlassBuilderWind::progressAdd);
-    connect(algo,&GlassBuilder::keepAwake,
+    connect(algo,&PrimGlassBuilder::keepAwake,
             this,&GlassBuilderWind::keepAwake);
 }
 

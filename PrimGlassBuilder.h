@@ -1,22 +1,26 @@
 #ifndef PRIMGLASSBUILDER_H
 #define PRIMGLASSBUILDER_H
 
-#include<boost/graph/adjacency_list.hpp>
-#include<boost/graph/properties.hpp>
-#include<boost/property_map/property_map.hpp>
-#include <boost/graph/prim_minimum_spanning_tree.hpp>
 #include "GlassBuilder.h"
 #include <QObject>
 
 //using namespace Eigen;
-using namespace boost;
 
 extern const int INF;
 typedef uint index;
 
-typedef boost::adjacency_list<vecS,vecS,undirectedS,index,property<edge_weight_t, int>> Graph;
-typedef graph_traits<Graph>::vertex_descriptor Vertex;
-typedef graph_traits<Graph>::edge_descriptor Edge;
+class edge
+{
+public:
+    edge();
+    edge(TokiPos,TokiPos);
+    edge(ushort r1,ushort c1,ushort r2,ushort c2);
+    TokiPos beg;
+    TokiPos end;
+    int lengthSquare;
+    bool connectWith(TokiPos) const;
+    void drawEdge(glassMap &) const;
+};
 
 
 #ifdef WITH_QT
@@ -42,10 +46,9 @@ signals:
 #endif
 private:
     std::vector<TokiPos> targetPoints;
-    Graph graph;
-    std::vector<Edge> minSpawningTree;
-
-    void addNodesEdgesToGraph();
+    std::list<edge> edges;
+    std::vector<edge> tree;
+    void addEdgesToGraph();
     void runPrim();
 };
 
