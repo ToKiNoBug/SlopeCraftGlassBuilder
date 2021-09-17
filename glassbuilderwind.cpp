@@ -9,13 +9,13 @@ GlassBuilderWind::GlassBuilderWind(QWidget *parent)
 
     algo=new PrimGlassBuilder;
 
-    raw.setZero(64,64);
+    raw.setZero(512,512);
     //short targets[][2]={{0,0},{60,6},{5,34},{30,60},{6,60},{50,40},{20,30},{20,3}};
 
     for(ushort r=0;r<raw.rows();r++)
         for(ushort c=0;c<raw.cols();c++) {
-            if(randD()<1.0/32)
-                raw(r,c)=GlassBuilder::blockType::target;
+            if(randD()<1.0/128)
+                raw(r,c)=PrimGlassBuilder::blockType::target;
         }
 
 
@@ -23,7 +23,7 @@ GlassBuilderWind::GlassBuilderWind(QWidget *parent)
         raw(targets[i][0],targets[i][1])=GlassBuilder::blockType::target;
     }*/
 
-    QImage temp=EImage2QImage(TokiMap2EImage(raw),4);
+    QImage temp=EImage2QImage(TokiMap2EImage(raw),1);
     ui->before->setPixmap(QPixmap::fromImage(temp));
 
     connect(algo,&PrimGlassBuilder::progressRangeSet,
@@ -55,7 +55,7 @@ GlassBuilderWind::~GlassBuilderWind()
 void GlassBuilderWind::on_buildBridge_clicked() {
     glassMap result=algo->makeBridge(raw,&builded);
     ui->after->setPixmap(QPixmap::fromImage(
-                             EImage2QImage(TokiMap2EImage(builded),4)));
+                             EImage2QImage(TokiMap2EImage(builded),1)));
 }
 
 void GlassBuilderWind::progressRangeSet(int min,int max,int val) {

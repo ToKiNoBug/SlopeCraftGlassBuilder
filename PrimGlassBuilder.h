@@ -12,6 +12,7 @@
 #include <Eigen/Dense>
 #include <vector>
 #include <queue>
+#include <stack>
 #include <unordered_set>
 #include <random>
 #include <cmath>
@@ -49,7 +50,7 @@ public:
     TokiPos end;
     int lengthSquare;
     bool connectWith(TokiPos) const;
-    void drawEdge(glassMap &) const;
+    void drawEdge(glassMap &,bool drawHead=false) const;
 };
 
 
@@ -65,7 +66,13 @@ class PrimGlassBuilder
 public:
     PrimGlassBuilder();
 #endif
-    glassMap makeBridge(const TokiMap & _targetMap,walkableMap* walkable=nullptr);
+    enum blockType{
+            air=0,
+            glass=1,
+            target=127
+        };
+    glassMap makeBridge(const TokiMap & _targetMap,
+                        walkableMap* walkable=nullptr);
 #ifdef WITH_QT
 signals:
     void progressRangeSet(int min,int max,int val);
@@ -80,8 +87,12 @@ private:
     std::vector<edge> tree;
     void addEdgesToGraph();
     void runPrim();
+    glassMap make4SingleMap(const TokiMap & _targetMap,
+                            walkableMap* walkable);
+    static edge connectSingleMaps(const PrimGlassBuilder * map1,TokiPos offset1,
+                                  const PrimGlassBuilder * map2, TokiPos offset2);
 };
 
 EImage TokiMap2EImage(const TokiMap&);
-
+double randD();
 #endif // PRIMGLASSBUILDER_H
