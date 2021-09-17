@@ -3,7 +3,6 @@
 
 #include <QMainWindow>
 #include <QImage>
-#include "GlassBuilder.h"
 #include "PrimGlassBuilder.h"
 QT_BEGIN_NAMESPACE
 namespace Ui { class GlassBuilderWind; }

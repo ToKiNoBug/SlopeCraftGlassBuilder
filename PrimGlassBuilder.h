@@ -1,13 +1,43 @@
 #ifndef PRIMGLASSBUILDER_H
 #define PRIMGLASSBUILDER_H
 
-#include "GlassBuilder.h"
+
 #include <QObject>
 
 //using namespace Eigen;
 
-extern const int INF;
-typedef uint index;
+#define WITH_QT
+
+#include <iostream>
+#include <Eigen/Dense>
+#include <vector>
+#include <queue>
+#include <unordered_set>
+#include <random>
+#include <cmath>
+#include "WaterItem.h"
+
+#include <QtConcurrent>
+#ifdef WITH_QT
+    #include <QObject>
+    #include <QRgb>
+#else
+typedef unsigned char uchar;
+typedef unsigned short ushort;
+typedef unsigned int uint;
+#endif
+
+
+using namespace Eigen;
+typedef unsigned int ARGB;
+typedef Array<ARGB,Dynamic,Dynamic> EImage;
+typedef Array<uchar,Dynamic,Dynamic> TokiMap;
+typedef TokiMap glassMap;
+typedef TokiMap walkableMap;
+
+extern const ARGB airColor;
+extern const ARGB targetColor;
+extern const ARGB glassColor;
 
 class edge
 {
@@ -51,5 +81,7 @@ private:
     void addEdgesToGraph();
     void runPrim();
 };
+
+EImage TokiMap2EImage(const TokiMap&);
 
 #endif // PRIMGLASSBUILDER_H

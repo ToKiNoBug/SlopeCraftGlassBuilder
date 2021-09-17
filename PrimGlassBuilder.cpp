@@ -1,5 +1,10 @@
 #include "PrimGlassBuilder.h"
+
 const int INF=0x7FFFFFFF;
+const ARGB airColor=qRgb(255,255,255);
+const ARGB targetColor=qRgb(0,0,0);
+const ARGB glassColor=qRgb(128,128,128);
+const ushort reportRate=50;
 
 edge::edge() {
     beg=TokiRC(0,0);
@@ -182,4 +187,17 @@ void PrimGlassBuilder::runPrim() {
         }
     }
     qDebug("prim算法完毕");
+}
+
+EImage TokiMap2EImage(const TokiMap& tm) {
+    EImage result(tm.rows(),tm.cols());
+    result.setConstant(airColor);
+    for(ushort r=0;r<tm.rows();r++)
+        for(ushort c=0;c<tm.cols();c++) {
+            if(tm(r,c)==1)
+                result(r,c)=glassColor;
+            if(tm(r,c)>1)
+                result(r,c)=targetColor;
+        }
+    return result;
 }

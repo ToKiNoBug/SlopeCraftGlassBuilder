@@ -1,5 +1,5 @@
 #include "GlassBuilder.h"
-
+/*
 const ushort GlassBuilder::popSize=50;        //种群规模
 const ushort GlassBuilder::maxGeneration=3000;      //最大代数
 const ushort GlassBuilder::maxFailTimes=5000;
@@ -7,10 +7,7 @@ const double GlassBuilder::crossoverProb=0.8;      //交叉概率
 const double GlassBuilder::mutateProb=0.05;     //变异概率
 const double GlassBuilder::mutateIntense=1.0/100;      //变异强度
 const double GlassBuilder::initializeTrueRate=0.75;
-const ARGB airColor=qRgb(255,255,255);
-const ARGB targetColor=qRgb(0,0,0);
-const ARGB glassColor=qRgb(128,128,128);
-const ushort reportRate=50;
+*/
 
 
 double randD(){
@@ -24,6 +21,8 @@ int randi(int low,int high) {
     std::uniform_int_distribution<int> rander(low,high);
     return rander(generator);
 }
+
+/*
 
 GlassBuilder::GlassBuilder()
 {
@@ -120,30 +119,17 @@ if(attachedTargets>=targetMap->size()) {
         if(visited.find()
         if(glass->operator()(i))
             Fitness--;
-    }*/
+    }
 } else
     Fitness=attachedTargets-targetMap->size();
 
 return Fitness;
 }
 
-EImage TokiMap2EImage(const TokiMap& tm) {
-    EImage result(tm.rows(),tm.cols());
-    result.setConstant(airColor);
-    for(ushort r=0;r<tm.rows();r++)
-        for(ushort c=0;c<tm.cols();c++) {
-            if(tm(r,c)==1)
-                result(r,c)=glassColor;
-            if(tm(r,c)>1)
-                result(r,c)=targetColor;
-        }
-    return result;
-}
-
 glassMap GlassBuilder::makeBridge(const TokiMap & _targetMap,walkableMap* walkable) {
 
     /*std::vector<TokiPos> targetPoints;   //要连接的目标点
-    std::vector<TokiPos> mutatePoints;     //所有可以突变的位点，*/
+    std::vector<TokiPos> mutatePoints;     //所有可以突变的位点，
     rows=_targetMap.rows();
     cols=_targetMap.cols();
     targetPoints.clear();
@@ -286,3 +272,5 @@ void GlassBuilder::run() {
     caculateAll();
     select();
 }
+
+*/

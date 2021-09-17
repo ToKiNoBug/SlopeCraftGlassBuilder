@@ -33,6 +33,7 @@ typedef TokiMap walkableMap;
 extern const ARGB airColor;
 extern const ARGB targetColor;
 extern const ARGB glassColor;
+/*
 #ifdef WITH_QT
 class GlassBuilder:public QObject
 {
@@ -76,9 +77,9 @@ private:
     ushort eliteIndex;      //精英个体的索引位置
     ushort generations;
 
-    /*
+
     ushort mapRows() const;
-    ushort mapCols() const;*/
+    ushort mapCols() const;
 
     void run();
 
@@ -89,6 +90,7 @@ private:
     void mutate();
     //uint dims() const;
 };
+*/
 
 walkableMap glassMap2walkableMap(const glassMap * glass,
                                  const std::vector<TokiPos> * targetMap);
@@ -103,7 +105,5 @@ void countConnected(ushort begRow,ushort begCol,
 double randD();
 
 int randi(int,int);
-
-EImage TokiMap2EImage(const TokiMap&);
 
 #endif // GLASSBUILDER_H
