@@ -14,7 +14,7 @@ using namespace boost;
 extern const int INF;
 typedef uint index;
 
-typedef boost::adjacency_list<vecS,vecS,undirectedS,index,int> Graph;
+typedef boost::adjacency_list<vecS,vecS,undirectedS,index,property<edge_weight_t, int>> Graph;
 typedef graph_traits<Graph>::vertex_descriptor Vertex;
 typedef graph_traits<Graph>::edge_descriptor Edge;
 
