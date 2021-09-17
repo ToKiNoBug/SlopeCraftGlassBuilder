@@ -9,29 +9,14 @@ GlassBuilderWind::GlassBuilderWind(QWidget *parent)
 
     algo=new PrimGlassBuilder;
 
-    raw.setZero(512,512);
-    //short targets[][2]={{0,0},{60,6},{5,34},{30,60},{6,60},{50,40},{20,30},{20,3}};
-
-    for(ushort r=0;r<raw.rows();r++)
-        for(ushort c=0;c<raw.cols();c++) {
-            if(randD()<1.0/128)
-                raw(r,c)=PrimGlassBuilder::blockType::target;
-        }
-
-
-    /*for(ushort i=0;i<sizeof(targets)/(2*sizeof(short));i++) {
-        raw(targets[i][0],targets[i][1])=GlassBuilder::blockType::target;
-    }*/
-
-    QImage temp=EImage2QImage(TokiMap2EImage(raw),1);
-    ui->before->setPixmap(QPixmap::fromImage(temp));
-
     connect(algo,&PrimGlassBuilder::progressRangeSet,
             this,&GlassBuilderWind::progressRangeSet);
     connect(algo,&PrimGlassBuilder::progressAdd,
             this,&GlassBuilderWind::progressAdd);
     connect(algo,&PrimGlassBuilder::keepAwake,
             this,&GlassBuilderWind::keepAwake);
+
+    on_refresh_clicked();
 }
 
 QImage EImage2QImage(const EImage & ei,ushort scale) {
@@ -68,3 +53,20 @@ ui->progressBar->setValue(ui->progressBar->value()+delta);
 void GlassBuilderWind::keepAwake() {
     QCoreApplication::processEvents();
 }
+
+void GlassBuilderWind::on_refresh_clicked()
+{
+    //short targets[][2]={{0,0},{60,6},{5,34},{30,60},{6,60},{50,40},{20,30},{20,3}};
+    raw.setZero(512,512);
+    for(ushort r=0;r<raw.rows();r++)
+        for(ushort c=0;c<raw.cols();c++) {
+            if(randD()<1.0/128)
+                raw(r,c)=PrimGlassBuilder::blockType::target;
+        }
+    QImage temp=EImage2QImage(TokiMap2EImage(raw),1);
+    ui->before->setPixmap(QPixmap::fromImage(temp));
+    /*for(ushort i=0;i<sizeof(targets)/(2*sizeof(short));i++) {
+        raw(targets[i][0],targets[i][1])=GlassBuilder::blockType::target;
+    }*/
+}
+

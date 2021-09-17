@@ -24,6 +24,8 @@ private slots:
     void progressAdd(int);
     void keepAwake();
 
+    void on_refresh_clicked();
+
 private:
     Ui::GlassBuilderWind *ui;
     PrimGlassBuilder * algo;

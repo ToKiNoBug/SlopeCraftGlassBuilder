@@ -291,7 +291,7 @@ void PrimGlassBuilder::runPrim() {
         for(;;) {
 
             if(selectedEdge==edges.end()) {
-                //qDebug("错误！找不到可行边");
+                qDebug("错误！找不到可行边");
                 break;
             }
             TokiPos z=selectedEdge->beg;
