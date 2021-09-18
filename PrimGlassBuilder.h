@@ -31,14 +31,15 @@ This file is part of SlopeCraft.
 #define WITH_QT
 
 #include <iostream>
+#include <random>
+#include <cmath>
+#include <ctime>
 #include <Eigen/Dense>
 #include <vector>
 #include <queue>
 #include <stack>
 #include <unordered_set>
-#include <random>
-#include <cmath>
-#include <ctime>
+#include <unsupported/Eigen/CXX11/Tensor>
 #include "WaterItem.h"
 
 #ifdef WITH_QT
@@ -77,6 +78,8 @@ public:
     bool connectWith(TokiPos) const;
     void drawEdge(glassMap &,bool drawHead=false) const;
 };
+
+TokiMap ySlice2TokiMap(const Tensor<uchar,3>&);
 
 glassMap connectBetweenLayers(const TokiMap & ,const TokiMap & ,
                           walkableMap* walkable);
@@ -130,4 +133,5 @@ double randD();
 void defaultProgressRangeSet(int,int,int);
 void defaultProgressAdd(int);
 void defaultKeepAwake();
+
 #endif // PRIMGLASSBUILDER_H

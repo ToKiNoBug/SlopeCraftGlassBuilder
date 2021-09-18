@@ -450,3 +450,12 @@ glassMap connectBetweenLayers(const TokiMap & map1,const TokiMap & map2,
     }
     return result;
 }
+
+TokiMap ySlice2TokiMap(const Tensor<uchar,3>& raw) {
+    TokiMap result(raw.dimension(0),raw.dimension(2));
+    result.setZero();
+    for(int i=0;i<raw.size();i++)
+        if(raw(i)>1)
+            result(i)=PrimGlassBuilder::target;
+    return result;
+}
