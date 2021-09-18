@@ -63,6 +63,9 @@ void GlassBuilderWind::on_refresh_clicked()
             if(randD()<1.0/128)
                 raw(r,c)=PrimGlassBuilder::blockType::target;
         }
+
+    raw.block(100,200,120,50)=PrimGlassBuilder::blockType::target;
+
     QImage temp=EImage2QImage(TokiMap2EImage(raw),1);
     ui->before->setPixmap(QPixmap::fromImage(temp));
     /*for(ushort i=0;i<sizeof(targets)/(2*sizeof(short));i++) {
