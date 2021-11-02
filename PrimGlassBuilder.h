@@ -28,43 +28,34 @@ This file is part of SlopeCraft.
 
 //using namespace Eigen;
 
-#define WITH_QT
-
 #include <iostream>
 #include <random>
 #include <cmath>
 #include <ctime>
-#include <Eigen/Dense>
 #include <vector>
 #include <queue>
 #include <stack>
 #include <unordered_set>
 #include <unsupported/Eigen/CXX11/Tensor>
+#include "defines.h"
+#include "TokiColor.h"
 #include "WaterItem.h"
 
 #ifdef WITH_QT
     #include <QObject>
-    #include <QRgb>
-    #include <QDebug>
-#else
-    #define qDebug()<< std::cerr<<
-    #define emit ;
-    typedef unsigned char uchar;
-    typedef unsigned short ushort;
-    typedef unsigned int uint;
 #endif
 
 
-using namespace Eigen;
-typedef unsigned int ARGB;
-typedef Array<ARGB,Dynamic,Dynamic> EImage;
-typedef Array<uchar,Dynamic,Dynamic> TokiMap;
-typedef TokiMap glassMap;
-typedef TokiMap walkableMap;
+//using namespace Eigen;
 
 extern const ARGB airColor;
 extern const ARGB targetColor;
 extern const ARGB glassColor;
+
+typedef Eigen::Array<uchar,Eigen::Dynamic,Eigen::Dynamic> TokiMap;
+typedef TokiMap glassMap;
+typedef TokiMap walkableMap;
+
 
 class edge
 {
@@ -79,7 +70,7 @@ public:
     void drawEdge(glassMap &,bool drawHead=false) const;
 };
 
-TokiMap ySlice2TokiMap(const Tensor<uchar,3>&);
+TokiMap ySlice2TokiMap(const Eigen::Tensor<uchar,3>&);
 
 glassMap connectBetweenLayers(const TokiMap & ,const TokiMap & ,
                           walkableMap* walkable);
@@ -128,7 +119,6 @@ private:
 
 EImage TokiMap2EImage(const TokiMap&);
 
-double randD();
 
 void defaultProgressRangeSet(int,int,int);
 void defaultProgressAdd(int);

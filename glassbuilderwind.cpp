@@ -38,7 +38,10 @@ GlassBuilderWind::~GlassBuilderWind()
 
 
 void GlassBuilderWind::on_buildBridge_clicked() {
+    std::clock_t curTime=std::clock();
     glassMap result=algo->makeBridge(raw,&builded);
+    std::cerr<<"Time cost : "
+            <<1000.0*double(std::clock()-curTime)/CLOCKS_PER_SEC<<"ms"<<std::endl;
     ui->after->setPixmap(QPixmap::fromImage(
                              EImage2QImage(TokiMap2EImage(builded),1)));
 }
@@ -58,9 +61,14 @@ void GlassBuilderWind::on_refresh_clicked()
 {
     //short targets[][2]={{0,0},{60,6},{5,34},{30,60},{6,60},{50,40},{20,30},{20,3}};
     raw.setZero(512,512);
+
+    Eigen::ArrayXXd randD(raw.rows(),raw.cols());
+    randD.setRandom();
+    randD=randD.abs();
+
     for(ushort r=0;r<raw.rows();r++)
         for(ushort c=0;c<raw.cols();c++) {
-            if(randD()<1.0/128)
+            if(randD(r,c)<1.0/128)
                 raw(r,c)=PrimGlassBuilder::blockType::target;
         }
 
