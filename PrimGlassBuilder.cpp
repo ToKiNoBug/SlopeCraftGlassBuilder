@@ -310,12 +310,13 @@ void PrimGlassBuilder::addEdgesToGraph() {
 
 void PrimGlassBuilder::runPrim() {
     tree.clear();
+    tree.reserve(targetPoints.size());
     //TokiPos x,y;
-    std::unordered_set<TokiPos> found,unsearched;
+    std::unordered_set<TokiPos> found;//,unsearched;
     found.clear();
     found.reserve(targetPoints.size());
-    unsearched.clear();
-    unsearched.reserve(targetPoints.size());
+    //unsearched.clear();
+    //unsearched.reserve(targetPoints.size());
 
     found.emplace(targetPoints[0]);
 
@@ -326,15 +327,7 @@ void PrimGlassBuilder::runPrim() {
     while(!eraseTask.empty())
         eraseTask.pop();
 
-    for(auto i=targetPoints.cbegin();;) {
-        i++;
-        if(i==targetPoints.cend())
-            break;
-
-        unsearched.emplace(*i);
-    }
-
-    while(!unsearched.empty()) {
+    while(found.size()<targetPoints.size()) {
 
         while(!eraseTask.empty()) {
             edges.erase(eraseTask.top());
@@ -344,7 +337,7 @@ void PrimGlassBuilder::runPrim() {
         auto selectedEdge=edges.begin();
 
         //从列表中第一个元素开始搜索第一个可行边
-        for(;;) {
+        while(true) {
             if(selectedEdge==edges.end()) {
                 std::cerr<<"Error: failed to find valid edge!\n";
                 break;
@@ -360,8 +353,8 @@ void PrimGlassBuilder::runPrim() {
                 //如果一条边的首尾都是已经被连接到的点，那么移除这条边
                 continue;
             }
-            bool uz=unsearched.find(z)!=unsearched.end();
-            bool uw=unsearched.find(w)!=unsearched.end();
+            bool uz=!fz;
+            bool uw=!fw;
             if((fz&&uw)||(fw&&uz)) {
                 //找到了第一条可行的边
                 break;
@@ -380,8 +373,8 @@ void PrimGlassBuilder::runPrim() {
                 it++;//如果一条边的首尾都是已经被连接到的点，那么移除这条边
                 continue;
             }
-            bool ux=unsearched.find(x)!=unsearched.end();
-            bool uy=unsearched.find(y)!=unsearched.end();
+            bool ux=!fx;
+            bool uy=!fy;
 
             if((fx&&uy)||(fy&&ux)) {
                 if(it->lengthSquare<selectedEdge->lengthSquare)
@@ -398,8 +391,8 @@ void PrimGlassBuilder::runPrim() {
             TokiPos y=selectedEdge->end;
             found.emplace(x);
             found.emplace(y);
-            unsearched.erase(x);
-            unsearched.erase(y);
+            //unsearched.erase(x);
+            //unsearched.erase(y);
             tree.push_back(*selectedEdge);
         }
         emit progressRangeSet(0,targetPoints.size(),found.size());
