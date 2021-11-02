@@ -313,10 +313,18 @@ void PrimGlassBuilder::runPrim() {
     //TokiPos x,y;
     std::unordered_set<TokiPos> found,unsearched;
     found.clear();
+    found.reserve(targetPoints.size());
     unsearched.clear();
+    unsearched.reserve(targetPoints.size());
+
     found.emplace(targetPoints[0]);
 
     emit progressRangeSet(0,targetPoints.size(),0);
+
+    std::stack<std::list<edge>::iterator> eraseTask;
+
+    while(!eraseTask.empty())
+        eraseTask.pop();
 
     for(auto i=targetPoints.cbegin();;) {
         i++;
@@ -327,6 +335,12 @@ void PrimGlassBuilder::runPrim() {
     }
 
     while(!unsearched.empty()) {
+
+        while(!eraseTask.empty()) {
+            edges.erase(eraseTask.top());
+            eraseTask.pop();
+        }
+
         auto selectedEdge=edges.begin();
 
         //从列表中第一个元素开始搜索第一个可行边
@@ -341,7 +355,9 @@ void PrimGlassBuilder::runPrim() {
             bool fw=found.find(w)!=found.end();
 
             if(fz&&fw) {
-                selectedEdge=edges.erase(selectedEdge);//如果一条边的首尾都是已经被连接到的点，那么移除这条边
+                eraseTask.push(selectedEdge);
+                selectedEdge++;
+                //如果一条边的首尾都是已经被连接到的点，那么移除这条边
                 continue;
             }
             bool uz=unsearched.find(z)!=unsearched.end();
@@ -360,7 +376,8 @@ void PrimGlassBuilder::runPrim() {
             bool fx=found.find(x)!=found.end();
             bool fy=found.find(y)!=found.end();
             if(fx&&fy) {
-                it=edges.erase(it);//如果一条边的首尾都是已经被连接到的点，那么移除这条边
+                eraseTask.push(it);
+                it++;//如果一条边的首尾都是已经被连接到的点，那么移除这条边
                 continue;
             }
             bool ux=unsearched.find(x)!=unsearched.end();
