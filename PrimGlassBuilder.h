@@ -102,6 +102,8 @@ class PrimGlassBuilder : public QObject
     Q_OBJECT
 public:
     explicit PrimGlassBuilder(QObject *parent = nullptr);
+    static const uint unitL=32;
+    static const uint reportRate=50;
 #else
 class PrimGlassBuilder
 {

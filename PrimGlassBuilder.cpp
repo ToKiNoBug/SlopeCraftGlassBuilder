@@ -152,8 +152,8 @@ PrimGlassBuilder::PrimGlassBuilder()
 glassMap PrimGlassBuilder::makeBridge(const TokiMap & _targetMap,
                                       walkableMap* walkable) {
     //clock_t lastTime=std::clock();
-    const int rowCount=ceil(double(_targetMap.rows())/130);
-    const int colCount=ceil(double(_targetMap.cols())/130);
+    const int rowCount=ceil(double(_targetMap.rows())/unitL);
+    const int colCount=ceil(double(_targetMap.cols())/unitL);
 
     std::vector<std::vector<PrimGlassBuilder*>> algos(rowCount);
     std::vector<std::vector<glassMap>> glassMaps(rowCount);
@@ -167,13 +167,10 @@ glassMap PrimGlassBuilder::makeBridge(const TokiMap & _targetMap,
         walkableMaps[r].resize(colCount);
         targetMaps[r].resize(colCount);
         for(int c=0;c<colCount;c++) {
-            /*qDebug()<<"targetMaps["<<r<<"]["<<c<<"]=_targetMap.block("
-            <<130*r<<','<<130*c<<','
-            <<std::min((long long)(130),_targetMap.rows()-r*130)<<','
-            <<std::min((long long)(130),_targetMap.cols()-c*130)<<");";*/
-            targetMaps[r][c]=_targetMap.block(130*r,130*c,
-                                              std::min((long long)(130),_targetMap.rows()-r*130),
-                                              std::min((long long)(130),_targetMap.cols()-c*130));
+
+            targetMaps[r][c]=_targetMap.block(unitL*r,unitL*c,
+                                              std::min((long long)(unitL),_targetMap.rows()-r*unitL),
+                                              std::min((long long)(unitL),_targetMap.cols()-c*unitL));
 
             algos[r][c]=new PrimGlassBuilder;
 #ifdef WITH_QT
@@ -200,14 +197,14 @@ glassMap PrimGlassBuilder::makeBridge(const TokiMap & _targetMap,
     for(int r=0;r<rowCount;r++)
         for(int c=0;c<colCount;c++) {
             if(r+1<rowCount) {
-                pairedEdge temp=connectSingleMaps(algos[r][c],TokiRC(130*r,130*c),
-                                            algos[r+1][c],TokiRC(130*(r+1),130*c));
+                pairedEdge temp=connectSingleMaps(algos[r][c],TokiRC(unitL*r,unitL*c),
+                                            algos[r+1][c],TokiRC(unitL*(r+1),unitL*c));
                 if(temp.lengthSquare>2)
                     interRegionEdges.push(temp);
             }
             if(c+1<colCount) {
-                pairedEdge temp=connectSingleMaps(algos[r][c],TokiRC(130*r,130*c),
-                                            algos[r][c+1],TokiRC(130*r,130*(c+1)));
+                pairedEdge temp=connectSingleMaps(algos[r][c],TokiRC(unitL*r,unitL*c),
+                                            algos[r][c+1],TokiRC(unitL*r,unitL*(c+1)));
                 if(temp.lengthSquare>2)
                     interRegionEdges.push(temp);
             }
@@ -224,17 +221,17 @@ glassMap PrimGlassBuilder::makeBridge(const TokiMap & _targetMap,
 
     for(int r=0;r<rowCount;r++)
         for(int c=0;c<colCount;c++) {
-            /*qDebug()<<"result.block("<<130*r<<','<<130*c<<','
+            /*qDebug()<<"result.block("<<unitL*r<<','<<unitL*c<<','
             <<targetMaps[r][c].rows()<<','<<targetMaps[r][c].cols()<<")=glassMaps["
             <<r<<"]["<<c<<"];";*/
-            result.block(130*r,130*c,targetMaps[r][c].rows(),targetMaps[r][c].cols())
+            result.block(unitL*r,unitL*c,targetMaps[r][c].rows(),targetMaps[r][c].cols())
                     =glassMaps[r][c];
             if(walkable!=nullptr) {
                 /*qDebug()<<"size(walkableMap)=["<<walkableMaps[r][c].rows()<<','<<walkableMaps[r][c].cols()<<"]";
-                qDebug()<<"walkable->block("<<130*r<<','<<130*c<<','
+                qDebug()<<"walkable->block("<<unitL*r<<','<<unitL*c<<','
                 <<targetMaps[r][c].rows()<<','<<targetMaps[r][c].cols()<<")=walkableMaps["
                 <<r<<"]["<<c<<"];";*/
-                walkable->block(130*r,130*c,
+                walkable->block(unitL*r,unitL*c,
                                 targetMaps[r][c].rows(),targetMaps[r][c].cols())
                         =walkableMaps[r][c];
             }
@@ -258,8 +255,8 @@ return result;
 
 glassMap PrimGlassBuilder::make4SingleMap(const TokiMap &_targetMap,
                                           walkableMap *walkable) {
-    if(_targetMap.rows()>130||_targetMap.cols()>130) {
-        //qDebug("错误！make4SingleMap不应当收到超过130*130的图");
+    if(_targetMap.rows()>unitL||_targetMap.cols()>unitL) {
+        //qDebug("错误！make4SingleMap不应当收到超过unitL*unitL的图");
         return glassMap(0,0);
     }
     targetPoints.clear();
@@ -448,8 +445,10 @@ void PrimGlassBuilder::runPrim() {
             //unsearched.erase(y);
             tree.push_back(*selectedEdge);
         }
-        emit progressRangeSet(0,targetPoints.size(),foundCount);
-        emit keepAwake();
+        if(foundCount%reportRate==0) {
+            emit progressRangeSet(0,targetPoints.size(),foundCount);
+            emit keepAwake();
+        }
     }
     //qDebug("prim算法完毕");
 }

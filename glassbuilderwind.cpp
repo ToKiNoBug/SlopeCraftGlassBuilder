@@ -68,7 +68,7 @@ void GlassBuilderWind::on_refresh_clicked()
 
     for(ushort r=0;r<raw.rows();r++)
         for(ushort c=0;c<raw.cols();c++) {
-            if(randD(r,c)<1.0/128)
+            if(randD(r,c)<10.0/128)
                 raw(r,c)=PrimGlassBuilder::blockType::target;
         }
 
