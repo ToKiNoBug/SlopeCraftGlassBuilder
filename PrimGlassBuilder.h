@@ -61,11 +61,31 @@ class edge
 {
 public:
     edge();
-    edge(TokiPos,TokiPos);
-    edge(ushort r1,ushort c1,ushort r2,ushort c2);
-    TokiPos beg;
-    TokiPos end;
+    edge(uint begIdx,uint endIdx);
+    //edge(uint begIdx,uint endIdx);
+    //edge(TokiPos,TokiPos);
+    //edge(ushort r1,ushort c1,ushort r2,ushort c2);
+    uint begIdx;
+    uint endIdx;
     int lengthSquare;
+
+    static const std::vector<TokiPos> * vertexes;
+
+    TokiPos beg() const;
+    TokiPos end() const;
+    bool connectWith(TokiPos) const;
+    void drawEdge(glassMap &,bool drawHead=false) const;
+};
+
+class pairedEdge : public std::pair<TokiPos,TokiPos>
+{
+public:
+    pairedEdge();
+    pairedEdge(TokiPos,TokiPos);
+    pairedEdge(ushort r1,ushort c1,ushort r2,ushort c2);
+    pairedEdge(const edge &);
+    int lengthSquare;
+
     bool connectWith(TokiPos) const;
     void drawEdge(glassMap &,bool drawHead=false) const;
 };
@@ -108,12 +128,12 @@ signals:
 private:
     std::vector<TokiPos> targetPoints;
     std::list<edge> edges;
-    std::vector<edge> tree;
+    std::vector<pairedEdge> tree;
     void addEdgesToGraph();
     void runPrim();
     glassMap make4SingleMap(const TokiMap & _targetMap,
                             walkableMap* walkable);
-    static edge connectSingleMaps(const PrimGlassBuilder * map1,TokiPos offset1,
+    static pairedEdge connectSingleMaps(const PrimGlassBuilder * map1,TokiPos offset1,
                                   const PrimGlassBuilder * map2, TokiPos offset2);
 };
 
