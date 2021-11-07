@@ -148,7 +148,6 @@ PrimGlassBuilder::PrimGlassBuilder()
     keepAwake=defaultKeepAwake;
 #endif
 }
-
 glassMap PrimGlassBuilder::makeBridge(const TokiMap & _targetMap,
                                       walkableMap* walkable) {
     //clock_t lastTime=std::clock();
@@ -172,15 +171,15 @@ glassMap PrimGlassBuilder::makeBridge(const TokiMap & _targetMap,
                                               std::min((long long)(unitL),_targetMap.rows()-r*unitL),
                                               std::min((long long)(unitL),_targetMap.cols()-c*unitL));
 
-            algos[r][c]=new PrimGlassBuilder;
-#ifdef WITH_QT
-            connect(algos[r][c],&PrimGlassBuilder::progressRangeSet,
-                    this,&PrimGlassBuilder::progressRangeSet);
-            connect(algos[r][c],&PrimGlassBuilder::progressAdd,
-                    this,&PrimGlassBuilder::progressAdd);
-            connect(algos[r][c],&PrimGlassBuilder::keepAwake,
-                    this,&PrimGlassBuilder::keepAwake);
-#endif
+			algos[r][c] = pgb.animate();
+//#ifdef WITH_QT
+//            connect(algos[r][c],&PrimGlassBuilder::progressRangeSet,
+//                    this,&PrimGlassBuilder::progressRangeSet);
+//            connect(algos[r][c],&PrimGlassBuilder::progressAdd,
+//                    this,&PrimGlassBuilder::progressAdd);
+//            connect(algos[r][c],&PrimGlassBuilder::keepAwake,
+//                    this,&PrimGlassBuilder::keepAwake);
+//#endif
         }
     }
     //qDebug("分区分块完毕，开始在每个分区内搭桥");
@@ -191,6 +190,7 @@ glassMap PrimGlassBuilder::makeBridge(const TokiMap & _targetMap,
                     algos[r][c]->make4SingleMap(targetMaps[r][c],
                                         (walkable==nullptr)?nullptr:(&walkableMaps[r][c]));
         }
+         emit progressRangeSet(0, rowCount, r);
     }
     //qDebug("每个分区内的搭桥完毕，开始在分区间搭桥");
     std::stack<pairedEdge> interRegionEdges;
@@ -200,13 +200,13 @@ glassMap PrimGlassBuilder::makeBridge(const TokiMap & _targetMap,
                 pairedEdge temp=connectSingleMaps(algos[r][c],TokiRC(unitL*r,unitL*c),
                                             algos[r+1][c],TokiRC(unitL*(r+1),unitL*c));
                 if(temp.lengthSquare>2)
-                    interRegionEdges.push(temp);
+                    interRegionEdges.emplace(temp);
             }
             if(c+1<colCount) {
                 pairedEdge temp=connectSingleMaps(algos[r][c],TokiRC(unitL*r,unitL*c),
                                             algos[r][c+1],TokiRC(unitL*r,unitL*(c+1)));
                 if(temp.lengthSquare>2)
-                    interRegionEdges.push(temp);
+                    interRegionEdges.emplace(temp);
             }
         }
     //qDebug()<<"分区间搭桥完毕，将搭建"<<interRegionEdges.size()<<"个分区间桥梁";
@@ -237,6 +237,7 @@ glassMap PrimGlassBuilder::makeBridge(const TokiMap & _targetMap,
             }
         }
     //qDebug("开始绘制分区间的桥");
+    
     while(!interRegionEdges.empty()) {
         interRegionEdges.top().drawEdge(result);
         if(walkable!=nullptr)
@@ -246,8 +247,9 @@ glassMap PrimGlassBuilder::makeBridge(const TokiMap & _targetMap,
     //qDebug("拼合分区完毕，开始delete各个分区的algo");
     for(int r=0;r<rowCount;r++)
         for(int c=0;c<colCount;c++)
-            delete algos[r][c];
+			pgb.recycle(algos[r][c]);
 
+    emit progressRangeSet(0, 100, 100);
     //qDebug()<<"用时"<<std::clock()-lastTime<<"毫秒";
 
 return result;
@@ -268,7 +270,7 @@ glassMap PrimGlassBuilder::make4SingleMap(const TokiMap &_targetMap,
                         &&_targetMap(r,c+1)&&_targetMap(r,c-1))
                     continue;
                 else
-                    targetPoints.push_back(TokiRC(r,c));
+                    targetPoints.emplace_back(TokiRC(r,c));
             }
         }
     targetPoints.shrink_to_fit();
@@ -278,7 +280,6 @@ glassMap PrimGlassBuilder::make4SingleMap(const TokiMap &_targetMap,
     edges.clear();
     tree.clear();
 
-    emit progressRangeSet(0,0,0);
 
     if(targetPoints.size()>1) {
         addEdgesToGraph();
@@ -287,7 +288,6 @@ glassMap PrimGlassBuilder::make4SingleMap(const TokiMap &_targetMap,
         //std::cerr<<"tree.size="<<tree.size()<<std::endl;
     }
 
-    emit progressRangeSet(0,100,100);
 
     glassMap result(_targetMap.rows(),_targetMap.cols());
     result.setZero();
@@ -342,32 +342,28 @@ pairedEdge PrimGlassBuilder::connectSingleMaps(
 
 void PrimGlassBuilder::addEdgesToGraph() {
     edges.clear();
-    edge::vertexes=&targetPoints;
+	edge::vertexes = std::addressof(targetPoints);
     int taskCount=(targetPoints.size()*(targetPoints.size()-1))/2;
-    emit progressRangeSet(0,taskCount,0);
+    //emit progressRangeSet(0,taskCount,0);
     for(uint i=0;i<targetPoints.size();i++) {
         for(uint j=i+1;j<targetPoints.size();j++) {
-            edges.push_back(edge(i,j));
+			edges.emplace_back(edge(i, j));
         }        
-        emit keepAwake();
-        emit progressAdd(targetPoints.size()-i);
+        //emit keepAwake();
+        //emit progressAdd(targetPoints.size()-i);
     }
     //qDebug("插入了所有的边");
 }
-
 void PrimGlassBuilder::runPrim() {
     tree.clear();
     tree.reserve(targetPoints.size()-1);
 
-    std::vector<bool> isFound(targetPoints.size());
-    for(uint idx=0;idx<targetPoints.size();idx++) {
-        isFound[idx]=false;
-    }
+    std::vector<bool> isFound(targetPoints.size(),false);
     isFound[0]=true;
 
     uint foundCount=1;
 
-    emit progressRangeSet(0,targetPoints.size(),0);
+    //emit progressRangeSet(0,targetPoints.size(),0);
 
     std::stack<std::list<edge>::iterator> eraseTask;
 
@@ -384,18 +380,18 @@ void PrimGlassBuilder::runPrim() {
         auto selectedEdge=edges.begin();
 
         //从列表中第一个元素开始搜索第一个可行边
-        while(true) {
+       for(;;) {
             if(selectedEdge==edges.end()) {
                 std::cerr<<"Error: failed to find valid edge!\n";
                 break;
             }
             //TokiPos z=selectedEdge->beg();
             //TokiPos w=selectedEdge->end();
-            bool fz=isFound[selectedEdge->begIdx];
-            bool fw=isFound[selectedEdge->endIdx];
+            bool fz = isFound[(selectedEdge)->begIdx];
+			bool fw = isFound[(selectedEdge)->endIdx];
 
             if(fz&&fw) {
-                eraseTask.push(selectedEdge);
+                eraseTask.emplace(selectedEdge);
                 selectedEdge++;
                 //如果一条边的首尾都是已经被连接到的点，那么移除这条边
                 continue;
@@ -413,10 +409,10 @@ void PrimGlassBuilder::runPrim() {
         for(auto it=selectedEdge;it!=edges.end();) {
             //if(selectedEdge->lengthSquare<=2)break;
             //TokiPos x=it->beg(),y=it->end();
-            bool fx=isFound[it->begIdx];
-            bool fy=isFound[it->endIdx];
+            bool fx = isFound[(it)->begIdx];
+			bool fy = isFound[(it)->endIdx];
             if(fx&&fy) {
-                eraseTask.push(it);
+                eraseTask.emplace(it);
                 it++;//如果一条边的首尾都是已经被连接到的点，那么移除这条边
                 continue;
             }
@@ -424,7 +420,7 @@ void PrimGlassBuilder::runPrim() {
             bool uy=!fy;
 
             if((fx&&uy)||(fy&&ux)) {
-                if(it->lengthSquare<selectedEdge->lengthSquare)
+                if ((it)->lengthSquare < (selectedEdge)->lengthSquare)
                     selectedEdge=it;
             }
             it++;
@@ -436,19 +432,19 @@ void PrimGlassBuilder::runPrim() {
         {
             //TokiPos x=selectedEdge->beg();
             //TokiPos y=selectedEdge->end();
-            isFound[selectedEdge->begIdx]=true;
-            isFound[selectedEdge->endIdx]=true;
+            isFound[(selectedEdge)->begIdx]=true;
+            isFound[(selectedEdge)->endIdx]=true;
             foundCount++;
             //found.emplace(x);
             //found.emplace(y);
             //unsearched.erase(x);
             //unsearched.erase(y);
-            tree.push_back(*selectedEdge);
+            tree.emplace_back(*selectedEdge);
         }
-        if(foundCount%reportRate==0) {
-            emit progressRangeSet(0,targetPoints.size(),foundCount);
-            emit keepAwake();
-        }
+        //if(foundCount%reportRate==0) {
+        //    //emit progressRangeSet(0,targetPoints.size(),foundCount);
+        //    emit keepAwake();
+        //}
     }
     //qDebug("prim算法完毕");
 }
@@ -474,9 +470,9 @@ glassMap connectBetweenLayers(const TokiMap & map1,const TokiMap & map2,
     for(int r=0;r<map1.rows();r++)
         for(int c=0;c<map1.cols();c++) {
             if(map1(r,c)>=PrimGlassBuilder::target)
-                target1.push_back(TokiRC(r,c));
+                target1.emplace_back(TokiRC(r,c));
             if(map2(r,c)>=PrimGlassBuilder::target)
-                target2.push_back(TokiRC(r,c));
+                target2.emplace_back(TokiRC(r,c));
         }
     std::list<pairedEdge> linkEdges;
     linkEdges.clear();
@@ -490,7 +486,7 @@ glassMap connectBetweenLayers(const TokiMap & map1,const TokiMap & map2,
             if(min.lengthSquare<=2)
                 break;
         }
-        linkEdges.push_back(min);
+        linkEdges.emplace_back(min);
     }
 
     glassMap result;
