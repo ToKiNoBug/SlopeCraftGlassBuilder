@@ -22,7 +22,7 @@ This file is part of SlopeCraft.
 
 #ifndef PRIMGLASSBUILDER_H
 #define PRIMGLASSBUILDER_H
-
+#include "object_pool.hpp"
 
 #include <QObject>
 
@@ -30,8 +30,6 @@ This file is part of SlopeCraft.
 
 #include <iostream>
 #include <random>
-#include <cmath>
-#include <ctime>
 #include <vector>
 #include <queue>
 #include <stack>
@@ -52,7 +50,7 @@ extern const ARGB airColor;
 extern const ARGB targetColor;
 extern const ARGB glassColor;
 
-typedef Eigen::Array<uchar,Eigen::Dynamic,Eigen::Dynamic> TokiMap;
+typedef Eigen::Array<uchar, Eigen::Dynamic, Eigen::Dynamic> TokiMap;
 typedef TokiMap glassMap;
 typedef TokiMap walkableMap;
 
@@ -101,6 +99,8 @@ class PrimGlassBuilder : public QObject
 {
     Q_OBJECT
 public:
+	template <typename T, size_t S> friend class tf::ObjectPool;
+	void* _object_pool_block;
     explicit PrimGlassBuilder(QObject *parent = nullptr);
     static const uint unitL=32;
     static const uint reportRate=50;
@@ -110,11 +110,12 @@ class PrimGlassBuilder
 public:
     PrimGlassBuilder();
 #endif
-    enum blockType{
-            air=0,
-            glass=1,
-            target=127
-        };
+	enum blockType 
+    {
+		air = 0,
+		glass = 1,
+		target = 127
+	};
     glassMap makeBridge(const TokiMap & _targetMap,
                         walkableMap* walkable=nullptr);
 #ifdef WITH_QT
@@ -138,6 +139,7 @@ private:
     static pairedEdge connectSingleMaps(const PrimGlassBuilder * map1,TokiPos offset1,
                                   const PrimGlassBuilder * map2, TokiPos offset2);
 };
+inline tf::ObjectPool<PrimGlassBuilder>pgb;
 
 EImage TokiMap2EImage(const TokiMap&);
 
