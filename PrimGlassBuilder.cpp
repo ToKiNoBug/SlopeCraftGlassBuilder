@@ -172,14 +172,16 @@ glassMap PrimGlassBuilder::makeBridge(const TokiMap & _targetMap,
                                               std::min((long long)(unitL),_targetMap.cols()-c*unitL));
 
 			algos[r][c] = pgb.animate();
-//#ifdef WITH_QT
-//            connect(algos[r][c],&PrimGlassBuilder::progressRangeSet,
-//                    this,&PrimGlassBuilder::progressRangeSet);
-//            connect(algos[r][c],&PrimGlassBuilder::progressAdd,
-//                    this,&PrimGlassBuilder::progressAdd);
-//            connect(algos[r][c],&PrimGlassBuilder::keepAwake,
-//                    this,&PrimGlassBuilder::keepAwake);
-//#endif
+            /*
+#ifdef WITH_QT
+            connect(algos[r][c],&PrimGlassBuilder::progressRangeSet,
+                    this,&PrimGlassBuilder::progressRangeSet);
+            connect(algos[r][c],&PrimGlassBuilder::progressAdd,
+                    this,&PrimGlassBuilder::progressAdd);
+            connect(algos[r][c],&PrimGlassBuilder::keepAwake,
+                    this,&PrimGlassBuilder::keepAwake);
+#endif
+            */
         }
     }
     //qDebug("分区分块完毕，开始在每个分区内搭桥");

@@ -25,7 +25,8 @@ HEADERS += \
     ../SlopeCraft/Kernel/TokiColor.h \
     ../SlopeCraft/Kernel/WaterItem.h \
     PrimGlassBuilder.h \
-    glassbuilderwind.h
+    glassbuilderwind.h \
+    object_pool.hpp
 
 FORMS += \
     glassbuilderwind.ui
