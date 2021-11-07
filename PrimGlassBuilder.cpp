@@ -373,6 +373,7 @@ void PrimGlassBuilder::runPrim() {
     while(foundCount<targetPoints.size()) {
 
         while(!eraseTask.empty()) {
+            edges.erase(eraseTask.top());
             eraseTask.pop();
         }
 
